@@ -13,6 +13,8 @@ namespace cardholder_api.Models
         public DbSet<PostModel> Posts { get; set; }
         public DbSet<CardHolder> CardHolders { get; set; }
         public DbSet<PokemonPost> PokemonPosts { get; set; }
+        public DbSet<TradeOffer> TradeOffers { get; set; }
+        public DbSet<OfferedCard> OfferCards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -22,6 +24,8 @@ namespace cardholder_api.Models
             builder.Entity<PokemonPost>().ToTable("PokemonPosts","public");
             builder.Entity<CardHolder>().ToTable("CardHolders","public");
             builder.Entity<pokemon_card>().ToTable("pokemon_cards","public");
+            builder.Entity<TradeOffer>().ToTable("TradeOffers", "public");
+            builder.Entity<OfferedCard>().ToTable("OfferCards", "public");
             builder.Entity<User>().Property(u => u.Initials).HasMaxLength(5);
             
         }

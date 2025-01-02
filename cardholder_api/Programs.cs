@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using cardholder_api.Models;
 using cardholder_api.Repositories;
+using cardholder_api.Repositories.IRepositories;
 using cardholder_api.Respo;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(opt =>
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
-
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();

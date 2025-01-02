@@ -8,5 +8,5 @@ public interface ICardHolderRepository
     Task<CardHolder> GetUserCardAsync(string userId, string cardId);
     Task<CardHolder> AddCardToUserAsync(string userId, string cardId, int quantity = 1);
     Task UpdateCardQuantityAsync(string userId, string cardId, int quantity);
-    Task ProcessTradeAsync(string sellerId, string buyerId, string cardId, int quantity);
+    Task ProcessTradeAsync(string fromUserId, string toUserId, string cardId, int quantity);
 }

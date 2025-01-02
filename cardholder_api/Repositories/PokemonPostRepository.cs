@@ -1,4 +1,5 @@
 ﻿using cardholder_api.Models;
+using cardholder_api.Repositories.IRepositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace cardholder_api.Repositories;
@@ -12,12 +13,14 @@ public class PokemonPostRepository : IPokemonPostRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<PokemonPost>> GetPostsAsync()
+    public async Task<IEnumerable<PokemonPost>> GetAllPostsAsync()
     {
         return await _context.PokemonPosts
             .Include(p => p.Poster)
-            .Include(p => p.Card)
-            .Where(p => p.Status != PostStatus.Disabled)
+            .Include( p => p.Card)
+            .Include(p => p.TradeOffers)
+                .ThenInclude(t => t.OfferedCards)
+            .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
 
@@ -25,15 +28,27 @@ public class PokemonPostRepository : IPokemonPostRepository
     {
         return await _context.PokemonPosts
             .Include(p => p.Poster)
-            .Include(p => p.Card)
+            .Include( p => p.Card)
+            .Include(p => p.TradeOffers)
+                .ThenInclude(t => t.OfferedCards)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
-    public async Task<PokemonPost> AddPostAsync(PokemonPost post)
+    public async Task<IEnumerable<PokemonPost>> GetPostsByUserIdAsync(string userId)
+    {
+        return await _context.PokemonPosts
+            .Include(p => p.TradeOffers)
+            
+                .ThenInclude(t => t.OfferedCards)
+            .Where(p => p.PosterId == userId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task CreatePostAsync(PokemonPost post)
     {
         _context.PokemonPosts.Add(post);
         await _context.SaveChangesAsync();
-        return post;
     }
 
     public async Task UpdatePostAsync(PokemonPost post)
@@ -42,24 +57,64 @@ public class PokemonPostRepository : IPokemonPostRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeletePostAsync(int id)
+    public async Task<TradeOffer> GetTradeOfferByIdAsync(int offerId)
     {
-        var post = await _context.PokemonPosts.FindAsync(id);
-        if (post != null)
-        {
-            _context.PokemonPosts.Remove(post);
-            await _context.SaveChangesAsync();
-        }
+        return await _context.TradeOffers
+            .Include(t => t.OfferedCards)
+            .FirstOrDefaultAsync(t => t.Id == offerId);
     }
-
-    public async Task<PokemonPost> ChangePostStatusAsync(int id, PostStatus status)
+    
+    public async Task UpdatePostStatusAsync(int postId, PostStatus status)
     {
-        var post = await _context.PokemonPosts.FindAsync(id);
+        var post = await _context.PokemonPosts.FindAsync(postId);
         if (post != null)
         {
             post.Status = status;
             await _context.SaveChangesAsync();
         }
-        return post;
+    }
+
+    public async Task AddTradeOfferAsync(TradeOffer offer)
+    {
+        _context.TradeOffers.Add(offer);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateTradeOfferStatusAsync(int offerId, OfferStatus status)
+    {
+        var offer = await _context.TradeOffers.FindAsync(offerId);
+        if (offer != null)
+        {
+            offer.Status = status;
+            if (status == OfferStatus.Accepted)
+            {
+                var post = await _context.PokemonPosts.FindAsync(offer.PostId);
+                if (post != null)
+                {
+                    post.Status = PostStatus.Inactive;
+                }
+            }
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<IEnumerable<TradeOffer>> GetTradeOffersByPostIdAsync(int postId)
+    {
+        return await _context.TradeOffers
+            .Include(t => t.Trader)
+            .Include(t => t.OfferedCards)
+            .Where(t => t.PostId == postId)
+            .OrderByDescending(t => t.OfferDate)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<TradeOffer>> GetTradeOffersByUserIdAsync(string userId)
+    {
+        return await _context.TradeOffers
+            .Include(t => t.Post)
+            .Include(t => t.OfferedCards)
+            .Where(t => t.TraderId == userId)
+            .OrderByDescending(t => t.OfferDate)
+            .ToListAsync();
     }
 }
