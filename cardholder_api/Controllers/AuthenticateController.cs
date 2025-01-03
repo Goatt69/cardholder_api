@@ -1,4 +1,5 @@
-﻿using cardholder_api.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using cardholder_api.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -65,7 +66,8 @@ namespace cardholder_api.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var user = await _userManager.FindByNameAsync(model.Username);
+            var normalizedEmail = model.Email.ToUpperInvariant();
+            var user = await _userManager.FindByEmailAsync(normalizedEmail);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
                 return Unauthorized(new { Status = false, Message = "Invalid username or password" });
     
@@ -104,9 +106,9 @@ namespace cardholder_api.Controllers
         [HttpPost("login-with-totp")]
         public async Task<IActionResult> LoginWithTotp([FromBody] LoginModel model, [FromQuery] string totpCode)
         {
-            var user = await _userManager.FindByNameAsync(model.Username);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-                return Unauthorized(new { Status = false, Message = "Invalid username or password" });
+                return Unauthorized(new { Status = false, Message = "Invalid email or password" });
 
             if (string.IsNullOrEmpty(user.TotpSecretKey))
                 return BadRequest("TOTP not set up for this user");
