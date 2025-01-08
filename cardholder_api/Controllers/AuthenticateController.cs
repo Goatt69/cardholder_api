@@ -153,6 +153,11 @@ namespace cardholder_api.Controllers
                 });
             }
 
+            if (!user.EmailConfirmed)
+            {
+                return BadRequest(new { Status = false, Message = "Email not confirmed" });
+            }
+            
             var userRoles = await _userManager.GetRolesAsync(user);
             var authClaims = new List<Claim>
             {
@@ -270,6 +275,19 @@ namespace cardholder_api.Controllers
                 user.TotpSecretKey = GenerateSecretKey();
                 user.TwoFactorEnabled = true;
                 await _userManager.UpdateAsync(user);
+                
+                var emailBody = $@"
+                    <h2>Two-Factor Authentication Setup</h2>
+                    <p>Your TOTP Secret Key is:</p>
+                    <p><strong>{user.TotpSecretKey}</strong></p>
+                    <p>Please use this key to set up your authenticator app.</p>
+                    <p>Keep this key secure and do not share it with anyone.</p>";
+
+                await _emailService.SendEmailAsync(
+                    user.Email,
+                    "TOTP Setup Information",
+                    emailBody
+                    );
             }
 
             return Ok(new { SecretKey = user.TotpSecretKey });
