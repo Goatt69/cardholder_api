@@ -1,4 +1,6 @@
-﻿using cardholder_api.Models;
+﻿using System.Security.Claims;
+using cardholder_api.Models;
+using cardholder_api.Models.DTOs;
 using cardholder_api.Repositories;
 using cardholder_api.Repositories.IRepositories;
 using Microsoft.AspNetCore.Authorization;
@@ -25,30 +27,58 @@ namespace cardholder_api.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<PokemonPost>> CreatePost(PokemonPost post)
+        public async Task<ActionResult<PokemonPost>> CreatePost(PokePostCreateDto dto)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var username = User.Identity.Name;
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null)
+                return NotFound();
 
             // Verify user owns the card they're posting
-            var userCard = await _cardHolderRepository.GetUserCardAsync(user.Id, post.CardId);
+            var userCard = await _cardHolderRepository.GetUserCardAsync(user.Id, dto.CardId);
             if (userCard == null || userCard.Quantity < 1)
             {
                 return BadRequest("You don't own this card");
             }
 
-            post.PosterId = user.Id;
-            post.CreatedAt = DateTime.UtcNow;
-            post.Status = PostStatus.Active;
+            var post = new PokemonPost
+            {
+                PosterId = user.Id,
+                CardId = dto.CardId,
+                Description = dto.Description,
+                CreatedAt = DateTime.UtcNow,
+                Status = PostStatus.Active
+            };
 
             await _repository.CreatePostAsync(post);
             return CreatedAtAction(nameof(GetPosts), new { id = post.Id }, post);
         }
-
+        
         [HttpPost("{postId}/offers")]
         [Authorize]
-        public async Task<ActionResult<TradeOffer>> CreateTradeOffer(int postId, TradeOffer offer)
+        public async Task<ActionResult<TradeOffer>> CreateTradeOffer(int postId, TradeOfferDto dto)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var username = User.Identity.Name;
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null)
+                return NotFound();
+    
+            // First verify the post exists
+            var post = await _repository.GetPostByIdAsync(postId);
+            if (post == null)
+                return NotFound("Post not found");
+            
+            var offer = new TradeOffer
+            {
+                PostId = postId,
+                TraderId = user.Id,
+                OfferDate = DateTime.UtcNow,
+                Status = OfferStatus.Pending,
+                OfferedCards = dto.OfferedCardIds.Select(cardId => new OfferedCard
+                {
+                    CardId = cardId
+                }).ToList()
+            };
 
             // Verify user owns all offered cards
             foreach (var offeredCard in offer.OfferedCards)
@@ -60,20 +90,33 @@ namespace cardholder_api.Controllers
                 }
             }
 
-            offer.TraderId = user.Id;
-            offer.PostId = postId;
-            offer.OfferDate = DateTime.UtcNow;
-            offer.Status = OfferStatus.Pending;
-
             await _repository.AddTradeOfferAsync(offer);
-            return Ok(offer);
+
+            var response = new TradeOfferResponseDto()
+            {
+                Id = offer.Id,
+                PostId = offer.PostId,
+                TraderId = offer.TraderId,
+                OfferDate = offer.OfferDate,
+                Status = offer.Status,
+                OfferedCards = offer.OfferedCards.Select(oc => new OfferedCardDto
+                {
+                    Id = oc.Id,
+                    CardId = oc.CardId
+                }).ToList()
+            };
+            return Ok(response);
         }
 
         [HttpPut("offers/{offerId}/accept")]
         [Authorize]
         public async Task<IActionResult> AcceptTradeOffer(int offerId)
         {
-            var user = await _userManager.GetUserAsync(User);
+            var username = User.Identity.Name;
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null)
+                return NotFound();
+            
             var offer = await _repository.GetTradeOfferByIdAsync(offerId);
 
             if (offer == null)
@@ -118,6 +161,29 @@ namespace cardholder_api.Controllers
         {
             await _repository.UpdatePostStatusAsync(id, status);
             return NoContent();
+        }
+        
+        [HttpGet("{postId}/offers")]
+        public async Task<ActionResult<IEnumerable<TradeOfferResponseDto>>> GetOffersForPost(int postId)
+        {
+            var offers = await _repository.GetTradeOffersByPostIdAsync(postId);
+    
+            var response = offers.Select(offer => new TradeOfferResponseDto
+            {
+                Id = offer.Id,
+                PostId = offer.PostId,
+                TraderId = offer.TraderId,
+                OfferDate = offer.OfferDate,
+                Status = offer.Status,
+                OfferedCards = offer.OfferedCards.Select(oc => new OfferedCardDto
+                {
+                    Id = oc.Id,
+                    CardId = oc.CardId,
+                    Card = oc.Card // Include full card details
+                }).ToList()
+            });
+
+            return Ok(response);
         }
     }
 }

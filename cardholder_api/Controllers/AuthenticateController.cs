@@ -246,6 +246,7 @@ namespace cardholder_api.Controllers
                 Status = true,
                 UserDetails = new
                 {
+                    Id = user.Id,
                     Username = user.UserName,
                     Email = user.Email,
                     AvatarUrl = user.AvatarUrl,

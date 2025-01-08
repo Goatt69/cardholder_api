@@ -97,12 +97,13 @@ public class PokemonPostRepository : IPokemonPostRepository
             await _context.SaveChangesAsync();
         }
     }
-
+    
     public async Task<IEnumerable<TradeOffer>> GetTradeOffersByPostIdAsync(int postId)
     {
         return await _context.TradeOffers
             .Include(t => t.Trader)
             .Include(t => t.OfferedCards)
+            .ThenInclude(oc => oc.Card) // Include full card data
             .Where(t => t.PostId == postId)
             .OrderByDescending(t => t.OfferDate)
             .ToListAsync();
