@@ -123,12 +123,30 @@ namespace cardholder_api.Controllers
 
         private string GenerateRandomPassword()
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lowerCase = "abcdefghijklmnopqrstuvwxyz";
+            const string digits = "0123456789";
+            const string special = "!@#$%^&*()";
+    
             var random = new Random();
-            return new string(Enumerable.Repeat(chars, 12)
-                .Select(s => s[random.Next(s.Length)]).ToArray());
+            var password = new StringBuilder();
+    
+            // Ensure at least one of each required character type
+            password.Append(upperCase[random.Next(upperCase.Length)]);
+            password.Append(lowerCase[random.Next(lowerCase.Length)]);
+            password.Append(digits[random.Next(digits.Length)]);
+            password.Append(special[random.Next(special.Length)]);
+    
+            // Fill the rest to reach desired length
+            while (password.Length < 12)
+            {
+                var allChars = upperCase + lowerCase + digits + special;
+                password.Append(allChars[random.Next(allChars.Length)]);
+            }
+    
+            // Shuffle the final password
+            return new string(password.ToString().ToCharArray().OrderBy(x => random.Next()).ToArray());
         }
-
 
 
         [HttpPost("login")]
