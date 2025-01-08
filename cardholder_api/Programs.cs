@@ -4,6 +4,7 @@ using cardholder_api.Models;
 using cardholder_api.Repositories;
 using cardholder_api.Repositories.IRepositories;
 using cardholder_api.Respo;
+using cardholder_api.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -26,13 +27,13 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ICardHolderRepository, CardHolderRepository>();
 builder.Services.AddScoped<IPokemonPostRepository, PokemonPostRepository>();
+builder.Services.AddScoped<INewsPostRepository, NewsPostRepository>();
+builder.Services.AddScoped<EmailService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 var jwtSettings = builder.Configuration.GetSection("JWTKey");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Secret"]);
-
 
 builder.Services.AddAuthentication(options =>
     {
