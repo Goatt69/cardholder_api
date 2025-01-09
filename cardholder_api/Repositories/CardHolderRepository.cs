@@ -29,7 +29,7 @@ public class CardHolderRepository : ICardHolderRepository
     public async Task<CardHolder> AddCardToUserAsync(string userId, string cardId, int quantity = 1)
     {
         var existingCard = await GetUserCardAsync(userId, cardId);
-        
+
         if (existingCard != null)
         {
             existingCard.Quantity += quantity;
@@ -45,7 +45,7 @@ public class CardHolderRepository : ICardHolderRepository
             };
             _context.CardHolders.Add(existingCard);
         }
-        
+
         await _context.SaveChangesAsync();
         return existingCard;
     }
@@ -70,7 +70,7 @@ public class CardHolderRepository : ICardHolderRepository
             throw new InvalidOperationException("Insufficient cards for trade");
 
         fromUserCard.Quantity -= quantity;
-    
+
         if (toUserCard != null)
             toUserCard.Quantity += quantity;
         else
@@ -78,5 +78,4 @@ public class CardHolderRepository : ICardHolderRepository
 
         await _context.SaveChangesAsync();
     }
-
 }

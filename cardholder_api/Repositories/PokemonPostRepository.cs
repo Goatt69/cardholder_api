@@ -17,9 +17,9 @@ public class PokemonPostRepository : IPokemonPostRepository
     {
         return await _context.PokemonPosts
             .Include(p => p.Poster)
-            .Include( p => p.Card)
+            .Include(p => p.Card)
             .Include(p => p.TradeOffers)
-                .ThenInclude(t => t.OfferedCards)
+            .ThenInclude(t => t.OfferedCards)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
     }
@@ -28,9 +28,9 @@ public class PokemonPostRepository : IPokemonPostRepository
     {
         return await _context.PokemonPosts
             .Include(p => p.Poster)
-            .Include( p => p.Card)
+            .Include(p => p.Card)
             .Include(p => p.TradeOffers)
-                .ThenInclude(t => t.OfferedCards)
+            .ThenInclude(t => t.OfferedCards)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -38,8 +38,7 @@ public class PokemonPostRepository : IPokemonPostRepository
     {
         return await _context.PokemonPosts
             .Include(p => p.TradeOffers)
-            
-                .ThenInclude(t => t.OfferedCards)
+            .ThenInclude(t => t.OfferedCards)
             .Where(p => p.PosterId == userId)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
@@ -63,7 +62,7 @@ public class PokemonPostRepository : IPokemonPostRepository
             .Include(t => t.OfferedCards)
             .FirstOrDefaultAsync(t => t.Id == offerId);
     }
-    
+
     public async Task UpdatePostStatusAsync(int postId, PostStatus status)
     {
         var post = await _context.PokemonPosts.FindAsync(postId);
@@ -89,15 +88,13 @@ public class PokemonPostRepository : IPokemonPostRepository
             if (status == OfferStatus.Accepted)
             {
                 var post = await _context.PokemonPosts.FindAsync(offer.PostId);
-                if (post != null)
-                {
-                    post.Status = PostStatus.Inactive;
-                }
+                if (post != null) post.Status = PostStatus.Inactive;
             }
+
             await _context.SaveChangesAsync();
         }
     }
-    
+
     public async Task<IEnumerable<TradeOffer>> GetTradeOffersByPostIdAsync(int postId)
     {
         return await _context.TradeOffers

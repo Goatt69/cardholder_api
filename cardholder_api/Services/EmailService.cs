@@ -33,8 +33,7 @@ public class EmailService
             IsBodyHtml = true
         };
         mailMessage.To.Add(to);
-        
+
         await _smtpClient.SendMailAsync(mailMessage);
     }
-    
 }

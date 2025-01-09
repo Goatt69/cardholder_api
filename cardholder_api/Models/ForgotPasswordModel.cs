@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace cardholder_api.Models
+namespace cardholder_api.Models;
+
+public class ForgotPasswordModel
 {
-    public class ForgotPasswordModel
-    {
-        [Required, EmailAddress]
-        public string Email { get; set; } = string.Empty;
-    }
+    [Required] [EmailAddress] public string Email { get; set; } = string.Empty;
 }

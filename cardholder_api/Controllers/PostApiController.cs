@@ -32,16 +32,13 @@ public class PostApiController : ControllerBase
             return NotFound();
         return Ok(post);
     }
-    
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreatePost([FromBody] PostCreateDto createDto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Unauthorized();
-        }
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         var post = new PostModel
         {
@@ -57,21 +54,21 @@ public class PostApiController : ControllerBase
         var createdPost = await _postRepository.CreatePostAsync(post);
         return CreatedAtAction(nameof(GetPost), new { id = createdPost.Id }, createdPost);
     }
-    
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePost(int id, [FromBody] PostUpdateDto updateDto)
     {
         if (id != updateDto.Id)
             return BadRequest();
-        
+
         var post = await _postRepository.GetPostByIdAsync(id);
         if (post == null)
             return NotFound();
-        
+
         post.Content = updateDto.Content;
         post.ImageUrl = updateDto.ImageUrl;
         post.IsPublic = updateDto.IsPublic;
-    
+
         await _postRepository.UpdatePostAsync(post);
         return NoContent();
     }
