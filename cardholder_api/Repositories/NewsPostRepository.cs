@@ -35,11 +35,19 @@ namespace cardholder_api.Repositories
             return newsPost;
         }
 
-        public async Task<NewsPost> UpdateNewsPostAsync(NewsPost newsPost)
+        public async Task<NewsPost> UpdateNewsPostAsync(int id, NewsPost newsPost)
         {
-            _context.NewsPosts.Update(newsPost);
-            await _context.SaveChangesAsync();
-            return newsPost;
+            var existing = await _context.NewsPosts.FindAsync(id);
+            if (existing != null)
+            {
+                existing.Title = newsPost.Title;
+                existing.Content = newsPost.Content;
+                existing.ImageUrl = newsPost.ImageUrl;
+                existing.IsPublished = newsPost.IsPublished;
+                await _context.SaveChangesAsync();
+            }
+            return existing;
         }
     }
+
 }

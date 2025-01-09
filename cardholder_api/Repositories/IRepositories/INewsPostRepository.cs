@@ -7,6 +7,6 @@ namespace cardholder_api.Repositories.IRepositories
         Task<IEnumerable<NewsPost>> GetAllNewsPostsAsync();
         Task<NewsPost> GetNewsPostByIdAsync(int id);
         Task<NewsPost> CreateNewsPostAsync(NewsPost newsPost);
-        Task<NewsPost> UpdateNewsPostAsync(NewsPost newsPost);
+        Task<NewsPost> UpdateNewsPostAsync(int id, NewsPost newsPost);
     }
 }
