@@ -10,7 +10,7 @@ public class ChangePasswordModel
     [Required]
     [StringLength(100, MinimumLength = 6)]
     public string NewPassword { get; set; }
-
-    [Required]
+    
+    [Required, Compare("Password")]
     public string RetypeNewPassword { get; set; }
 }

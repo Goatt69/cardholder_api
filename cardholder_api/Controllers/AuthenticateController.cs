@@ -308,7 +308,12 @@ namespace cardholder_api.Controllers
                     );
             }
 
-            return Ok(new { SecretKey = user.TotpSecretKey });
+            return Ok(new
+            {
+                status = true,
+                Message = "TOTP setup initiated. Check your email for the secret key.",
+                SecretKey = user.TotpSecretKey
+            });
         }
 
         [HttpPost("verify-totp")]
@@ -319,7 +324,7 @@ namespace cardholder_api.Controllers
                 return BadRequest("Invalid user or TOTP not set up");
 
             var totp = new OtpNet.Totp(Base32Encoding.ToBytes(user.TotpSecretKey),
-                step: 30,
+                    step: 30,
                 mode: OtpHashMode.Sha1,
                 totpSize: 6);
 
@@ -380,6 +385,10 @@ namespace cardholder_api.Controllers
             if (user == null)
                 return NotFound(new { Status = false, Message = "User not found" });
 
+            var isOldPasswordValid = await _userManager.CheckPasswordAsync(user, model.OldPassword);
+            if (!isOldPasswordValid)
+                return BadRequest(new { Status = false, Message = "Old password is incorrect" });
+            
             var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
 
             if (result.Succeeded)
