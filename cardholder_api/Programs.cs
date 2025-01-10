@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using cardholder_api.Models;
 using cardholder_api.Repositories;
 using cardholder_api.Repositories.IRepositories;
-using cardholder_api.Respo;
 using cardholder_api.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +19,6 @@ builder.Services.AddIdentity<User, IdentityRole>()
 builder.Services.AddControllers()
     .AddJsonOptions(options => { options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; });
 
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ICardHolderRepository, CardHolderRepository>();
 builder.Services.AddScoped<IPokemonPostRepository, PokemonPostRepository>();
 builder.Services.AddScoped<INewsPostRepository, NewsPostRepository>();

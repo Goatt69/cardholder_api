@@ -98,29 +98,55 @@ public class AuthenticateController : ControllerBase
         if (user == null)
             return Ok(new { Status = true, Message = "If the email exists, password reset instructions will be sent" });
 
-        var newPassword = GenerateRandomPassword();
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var confirmationLink = Url.Action("ResetPassword", "Authenticate",
+            new { email = user.Email, token }, Request.Scheme);
+
+        var emailBody = $@"
+        <h2>Password Reset Request</h2>
+        <p>Click the link below to confirm your password reset:</p>
+        <p><a href='{confirmationLink}'>Reset Password</a></p>
+        <p>If you didn't request this, please ignore this email.</p>";
+
+        await _emailService.SendEmailAsync(
+            user.Email,
+            "Password Reset Confirmation",
+            emailBody
+        );
+
+        return Ok(new { Status = true, Message = "Password reset confirmation has been sent to your email" });
+    }
+
+    [HttpGet("reset-password")]
+    public async Task<IActionResult> ResetPassword(string email, string token)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+            return NotFound();
+
+        var newPassword = GenerateRandomPassword();
         var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
 
         if (result.Succeeded)
         {
             var emailBody = $@"
-            <h2>Password Reset</h2>
-            <p>Your password has been reset. Here is your new password:</p>
+            <h2>New Password</h2>
+            <p>Your password has been reset successfully. Here is your new password:</p>
             <p><strong>{newPassword}</strong></p>
             <p>Please change this password after logging in.</p>";
 
             await _emailService.SendEmailAsync(
                 user.Email,
-                "Password Reset Confirmation",
+                "Your New Password",
                 emailBody
             );
 
             return Ok(new { Status = true, Message = "New password has been sent to your email" });
         }
 
-        return BadRequest(new { Status = false, Message = "Password reset failed", result.Errors });
+        return BadRequest(new { Status = false, Message = "Password reset failed", Errors = result.Errors });
     }
+
 
     private string GenerateRandomPassword()
     {

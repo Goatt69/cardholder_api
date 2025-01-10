@@ -10,9 +10,6 @@ public class ApplicationDbContext : IdentityDbContext<User>
         : base(options)
     {
     }
-
-    public DbSet<Product> Products { get; set; }
-    public DbSet<PostModel> Posts { get; set; }
     public DbSet<CardHolder> CardHolders { get; set; }
     public DbSet<PokemonPost> PokemonPosts { get; set; }
     public DbSet<TradeOffer> TradeOffers { get; set; }
